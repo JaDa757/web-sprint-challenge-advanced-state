@@ -59,12 +59,15 @@ export function postAnswer(payload) {
   return async (dispatch) => {
     try {
       const response = await axios.post('http://localhost:9000/api/quiz/answer', payload);
-      if (response.status === 200) {        
+      if (response.status === 200) {
+        // Dispatch a success message
         dispatch({ type: types.SET_INFO_MESSAGE, payload: `Congrats: ${payload.newQuestion} is a great question!` });
-      } else {        
+      } else {
+        // Handle error cases
         dispatch({ type: types.SET_INFO_MESSAGE, payload: 'Failed to submit answer' });
       }
-    } catch (error) {      
+    } catch (error) {
+      // Handle errors
       console.error('Error:', error);
       dispatch({ type: types.SET_INFO_MESSAGE, payload: 'Failed to submit answer' });
     }

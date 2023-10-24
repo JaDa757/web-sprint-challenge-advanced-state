@@ -24,20 +24,22 @@ function Form(props) {
   };
 
   const onSubmit = async (evt) => {
-    evt.preventDefault();
-  
-    try {
-      const quizData = await getNextQuiz();
-  
-      if (quizData) {
-        const firstAnswer = quizData.answers[0];
-        const payload = {
-          quiz_id: quizData.quiz_id,
-          answer_id: firstAnswer.answer_id,
-          newQuestion: newQuestion,         
-        };
-  
-        postAnswer(payload);
+  evt.preventDefault();
+
+  try {
+    const quizData = await getNextQuiz();
+
+    if (quizData) {
+      const firstAnswer = quizData.answers[0];
+      const payload = {
+        quiz_id: quizData.quiz_id,
+        answer_id: firstAnswer.answer_id,
+        newQuestion: newQuestion, // Access newQuestion from state
+        newTrueAnswer: newTrueAnswer, // Access newTrueAnswer from state
+        newFalseAnswer: newFalseAnswer, // Access newFalseAnswer from state
+      };
+
+      postAnswer(payload);
 
         setNewQuestion('');
         setNewTrueAnswer('');
