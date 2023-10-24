@@ -1,20 +1,34 @@
-import React from 'react'
+import React from 'react';
+import { connect } from 'react-redux';
+import * as actionCreators from '../state/action-creators';
 
-export default function Wheel(props) {
+export function Wheel(props) {
+  const {
+    wheel,
+    moveClockwise,
+    moveCounterClockwise,
+  } = props
+
   return (
     <div id="wrapper">
       <div id="wheel">
-        <div className="cog active" style={{ "--i": 0 }}>B</div>
-        <div className="cog" style={{ "--i": 1 }}></div>
-        <div className="cog" style={{ "--i": 2 }}></div>
-        <div className="cog" style={{ "--i": 3 }}></div>
-        <div className="cog" style={{ "--i": 4 }}></div>
-        <div className="cog" style={{ "--i": 5 }}></div>{/* --i is a custom CSS property, no need to touch that nor the style object */}
+        {
+          [...Array(6).keys()].map(key => {
+            return (
+              <div
+                className={`cog ${wheel === key ? 'active' : ''}`} key={key}
+                style={{ "--i": key }}>
+                {wheel === key ? 'B' : null}
+              </div>
+            )
+          })
+        }
       </div>
-      <div id="keypad">
-        <button id="counterClockwiseBtn" >Counter clockwise</button>
-        <button id="clockwiseBtn">Clockwise</button>
+      <div id='keypad'>
+        <button id='counterClockwiseBtn' onClick={moveCounterClockwise}>Counter clockwise</button>
+        <button id='clockwideBtn' onClick={moveClockwise}>Clockwide</button>
       </div>
     </div>
   )
 }
+export default connect(st => st, actionCreators)(Wheel)
