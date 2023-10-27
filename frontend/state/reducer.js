@@ -27,7 +27,7 @@ const initialQuizState = {
   newQuestion: null,
 };
 
-function quiz(state = initialQuizState, action) {
+function quiz(state = initialQuizState, action) {    
   switch (action.type) {
     case types.SET_QUIZ_INTO_STATE:
       return { ...state, quiz: action.payload };
@@ -69,6 +69,7 @@ const initialFormState = {
 }
 
 function form(state = initialFormState, action) {
+ 
   switch (action.type) {
     case types.INPUT_CHANGE:
       return { ...state, [action.payload.field]: action.payload.value };

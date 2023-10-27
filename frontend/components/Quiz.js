@@ -1,65 +1,31 @@
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import * as actionCreators from '../state/action-creators';
-import axios from 'axios';
 
-function Quiz({ quiz, selectedAnswer, setQuiz, selectAnswer, setMessage }) {
-  const submitAnswer = () => {
+
+function Quiz({ quiz, selectedAnswer, selectAnswer, fetchQuiz, postAnswer }) {
+  const handleAnswerSubmission = () => {    
     if (selectedAnswer) {
-      axios
-        .post('http://localhost:9000/api/quiz/answer', {
-          quiz_id: quiz.quiz_id,
-          answer_id: selectedAnswer,
-        })
-        .then((response) => {
-          if (response.status === 200 && response.data.message) {
-            setMessage(response.data.message);
-          } else {
-            setMessage('Something went wrong. Please try again.');
-          }
-          selectAnswer(null);
-          loadNextQuiz();
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          setMessage('What a shame! That was the incorrect answer');
-          selectAnswer(null);
-          loadNextQuiz();
-        });
-    }
-  };
-
-  const loadNextQuiz = async () => {
-    try {
-      console.log('Fetching the next quiz...');
-      const response = await axios.get('http://localhost:9000/api/quiz/next');
-      console.log('Received response:', response);
-
-      if (response.status === 200) {
-        setQuiz(response.data);
-      } else {
-        console.error('Failed to fetch the next quiz');
-      }
-    } catch (error) {
-      console.error('Error:', error);
+      postAnswer({ quiz_id: quiz.quiz.quiz_id, answer_id: selectedAnswer });
     }
   };
 
   useEffect(() => {
-    if (!quiz) {
-      loadNextQuiz();
+    if (!quiz.quiz) {
+      fetchQuiz()
     }
-  }, [quiz]);
+  }, []);
 
   return (
     <div id="wrapper">
-      {quiz ? (
+      {quiz.quiz ? (
         <>
-          <h2>{quiz.question}</h2>
+          <h2>{quiz.quiz.question}</h2>
 
           <div id="quizAnswers">
-            {quiz.answers ? (
-              quiz.answers.map((answer) => (
+            {console.log(quiz)}
+            {quiz.quiz.answers ? (
+              quiz.quiz.answers.map((answer) => (
                 <div
                   key={answer.answer_id}
                   className={`answer ${selectedAnswer === answer.answer_id ? 'selected' : ''}`}
@@ -76,7 +42,7 @@ function Quiz({ quiz, selectedAnswer, setQuiz, selectAnswer, setMessage }) {
             ) : null}
           </div>
 
-          <button id="submitAnswerBtn" onClick={submitAnswer} disabled={!selectedAnswer}>
+          <button id="submitAnswerBtn" onClick={handleAnswerSubmission} disabled={!selectedAnswer}>
             Submit answer
           </button>
         </>
@@ -92,4 +58,11 @@ const mapStateToProps = (state) => ({
   selectedAnswer: state.selectedAnswer,
 });
 
-export default connect(mapStateToProps, actionCreators)(Quiz);
+const mapDispatchToProps = {
+  fetchQuiz: actionCreators.fetchQuiz,
+  postAnswer: actionCreators.postAnswer,
+  selectAnswer: actionCreators.selectAnswer,
+  setQuizIntoState: actionCreators.setQuiz,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Quiz);

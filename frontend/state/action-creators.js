@@ -18,7 +18,7 @@ export function setMessage(message) {
 }
 
 export function formSuccessMessage(newQuestion) {
-  return { type: types.SET_INFO_MESSAGE, payload: `Congrats: ${newQuestion} is a great question!` };
+  return { type: types.SET_INFO_MESSAGE, payload: `Congrats: "${newQuestion}" is a great question!` };
 }
 
 export function incorrectAnswerMessage() {
@@ -29,66 +29,69 @@ export function correctAnswerMessage() {
   return { type: types.SET_INFO_MESSAGE, payload: 'Nice job! That was the correct answer' };
 }
 
-export function setQuiz(quiz) {
+export function setQuiz(quiz) {  
   return { type: types.SET_QUIZ_INTO_STATE, payload: quiz }
 }
 
-export function inputChange(formData) {
-  return { type: 'INPUT_CHANGE', payload: formData };
+export function inputChange(input) {
+  return { type: types.INPUT_CHANGE, payload: input };
 }
 
 export function resetForm() {
-  return { type: 'RESET_FORM' };
+  return { type: types.RESET_FORM };
 }
 
 // ❗ Async action creators
-export function fetchQuiz() {
-  return async (dispatch) => {
-    dispatch({ type: types.SET_QUIZ_INTO_STATE, payload: null });
-    try {
-      const response = await axios.get('http://localhost:9000/api/quiz/next');
-      const quizData = response.data;
-      dispatch({ type: types.SET_QUIZ_INTO_STATE, payload: quizData });
-    } catch (error) {
-      dispatch({ type: types.SET_INFO_MESSAGE, payload: 'Failed to fetch the quiz' });
-    }
-  };
-}
-
-export function postAnswer(payload) {
-  return async (dispatch) => {
-    try {
-      const response = await axios.post('http://localhost:9000/api/quiz/answer', payload);
-      if (response.status === 200) {
-        // Dispatch a success message
-        dispatch({ type: types.SET_INFO_MESSAGE, payload: `Congrats: ${payload.newQuestion} is a great question!` });
-      } else {
-        // Handle error cases
-        dispatch({ type: types.SET_INFO_MESSAGE, payload: 'Failed to submit answer' });
-      }
-    } catch (error) {
-      // Handle errors
-      console.error('Error:', error);
-      dispatch({ type: types.SET_INFO_MESSAGE, payload: 'Failed to submit answer' });
-    }
-  };
-}
-
-export function postQuiz(payload) {
+export function fetchQuiz() {  
   return function (dispatch) {
-    return axios.post('http://localhost:9000/api/quiz/answer', payload)
-      .then((response) => {
-        if (response.status === 200) {
-          const feedback = response.data.feedback;
-          dispatch({ type: types.SET_INFO_MESSAGE, message: feedback });
-          dispatch({ type: types.RESET_FORM });
-          return feedback;
-        } else {
-          throw new Error('Failed to submit answer');
-        }
+    dispatch(setQuiz(null));    
+    axios.get('http://localhost:9000/api/quiz/next')
+      .then(res => {              
+        dispatch(setQuiz(res.data));
       })
-      .catch((error) => {
-        throw error;
+      .catch(err => {
+        console.error('Error in fetchQuiz:', err);
+        const errToDisplay = err.response ? err.response.data.message : err.message;
+        dispatch(setMessage(errToDisplay));
+      });
+  }
+}
+
+export function postAnswer({ quiz_id, answer_id }) {
+  return function (dispatch) {
+    axios.post('http://localhost:9000/api/quiz/answer', { quiz_id, answer_id })
+      .then(res => {
+        dispatch(selectAnswer(null))
+        dispatch(setMessage(res.data.message))
+      })
+      .catch(err => {
+        const errToDisplay = err.response ? err.response.data.message : err.message
+        dispatch(setMessage(errToDisplay))
+      })
+      .finally(() => {
+        dispatch(fetchQuiz());
+      })
+  }
+}
+
+export function postQuiz({
+  newQuestion,
+  newTrueAnswer,
+  newFalseAnswer,
+}) { 
+  return function (dispatch) {
+    axios.post('http://localhost:9000/api/quiz/new', {
+      question_text: newQuestion,
+      true_answer_text: newTrueAnswer,
+      false_answer_text: newFalseAnswer,
+    })
+      .then((res) => {        
+        dispatch(setMessage(`Congrats: "${res.data.question}" is a great question!`))
+        dispatch(resetForm())
+      })
+      .catch((err) => {
+        const errToDisplay = err.response ? err.response.data : err.message
+        dispatch(setMessage(errToDisplay))
       });
   };
 }

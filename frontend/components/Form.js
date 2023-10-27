@@ -1,84 +1,46 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import * as actionCreators from '../state/action-creators';
-import axios from 'axios';
+
 
 function Form(props) {
-  const {
-    formSuccessMessage,
-    setInfoMessage,
-    postAnswer,
+  const {    
+    postQuiz,
+    newQuestion,
+    newTrueAnswer,
+    newFalseAnswer,
+    inputChange,    
   } = props;
-
-  const [newQuestion, setNewQuestion] = useState('');
-  const [newTrueAnswer, setNewTrueAnswer] = useState('');
-  const [newFalseAnswer, setNewFalseAnswer] = useState('');
-  const [isFormValid, setIsFormValid] = useState(false);
+ 
+  const [infoMessage, setInfoMessage] = useState('');
 
   const validateForm = () => {
-    setIsFormValid(
-      newQuestion.trim() !== '' &&
+    return newQuestion.trim() !== '' &&
       newTrueAnswer.trim() !== '' &&
-      newFalseAnswer.trim() !== ''
-    );
+      newFalseAnswer.trim() !== ''    
   };
 
   const onSubmit = async (evt) => {
-  evt.preventDefault();
-
-  try {
-    const quizData = await getNextQuiz();
-
-    if (quizData) {
-      const firstAnswer = quizData.answers[0];
-      const payload = {
-        quiz_id: quizData.quiz_id,
-        answer_id: firstAnswer.answer_id,
-        newQuestion: newQuestion, // Access newQuestion from state
-        newTrueAnswer: newTrueAnswer, // Access newTrueAnswer from state
-        newFalseAnswer: newFalseAnswer, // Access newFalseAnswer from state
-      };
-
-      postAnswer(payload);
-
-        setNewQuestion('');
-        setNewTrueAnswer('');
-        setNewFalseAnswer('');
-        setIsFormValid(false);
-        formSuccessMessage(newQuestion);
-      } else {
-        setInfoMessage('Failed to fetch quiz data.');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const getNextQuiz = async () => {
+    evt.preventDefault();
+    
     try {
-      const response = await axios.get('http://localhost:9000/api/quiz/next');
-      if (response.status === 200) {
-        return response.data;
-      } else {
-        throw new Error('Failed to fetch the next quiz');
-      }
-    } catch (error) {
+      const payload = {
+        newQuestion,
+        newTrueAnswer,
+        newFalseAnswer,
+      };      
+      postQuiz(payload)     
+            
+      }       
+     catch (error) {
       console.error('Error:', error);
-      throw error;
+      setInfoMessage('Failed to submit answer.');
     }
   };
 
   const onChange = (evt) => {
     const { id, value } = evt.target;
-
-    if (id === 'newQuestion') {
-      setNewQuestion(value);
-    } else if (id === 'newTrueAnswer') {
-      setNewTrueAnswer(value);
-    } else if (id === 'newFalseAnswer') {
-      setNewFalseAnswer(value);
-    }
-
+    inputChange({ field: id, value });
     validateForm();
   };
 
@@ -110,13 +72,20 @@ function Form(props) {
         <button
           id="submitNewQuizBtn"
           type="submit"
-          disabled={!isFormValid}
+          disabled={!validateForm()}
         >
           Submit new quiz
         </button>
       </form>
+      {infoMessage && <div>{infoMessage}</div>}
     </div>
   );
 }
 
-export default connect(null, actionCreators)(Form);
+const mapStateToProps = (state) => ({
+  newQuestion: state.form.newQuestion,
+  newTrueAnswer: state.form.newTrueAnswer,
+  newFalseAnswer: state.form.newFalseAnswer,
+});
+
+export default connect(mapStateToProps, actionCreators)(Form);

@@ -26,7 +26,7 @@ export function Wheel(props) {
       </div>
       <div id='keypad'>
         <button id='counterClockwiseBtn' onClick={moveCounterClockwise}>Counter clockwise</button>
-        <button id='clockwideBtn' onClick={moveClockwise}>Clockwide</button>
+        <button id='clockwiseBtn' onClick={moveClockwise}>Clockwide</button>
       </div>
     </div>
   )
